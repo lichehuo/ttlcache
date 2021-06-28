@@ -41,6 +41,7 @@ type Cache struct {
 	expireReasonCallback   ExpireReasonCallback
 	checkExpireCallback    CheckExpireCallback
 	newItemCallback        ExpireCallback
+	setItemCallback        ExpireCallback
 	priorityQueue          *priorityQueue
 	expirationNotification chan bool
 	expirationTime         time.Time
@@ -269,6 +270,9 @@ func (cache *Cache) SetWithTTL(key string, data interface{}, ttl time.Duration) 
 	}
 
 	cache.mutex.Unlock()
+	if cache.setItemCallback != nil {
+		cache.setItemCallback(key, data)
+	}
 	if !exists && cache.newItemCallback != nil {
 		cache.newItemCallback(key, data)
 	}
@@ -433,6 +437,13 @@ func (cache *Cache) SetNewItemCallback(callback ExpireCallback) {
 	cache.mutex.Lock()
 	defer cache.mutex.Unlock()
 	cache.newItemCallback = callback
+}
+
+// SetSetItemCallback sets a callback that will be called when an item is set to the cache
+func (cache *Cache) SetSetItemCallback(callback ExpireCallback) {
+	cache.mutex.Lock()
+	defer cache.mutex.Unlock()
+	cache.setItemCallback = callback
 }
 
 // SkipTTLExtensionOnHit allows the user to change the cache behaviour. When this flag is set to true it will

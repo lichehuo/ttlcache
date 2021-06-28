@@ -940,3 +940,22 @@ func TestCache_Limit(t *testing.T) {
 		assert.Equal(t, "value", val, "Cache should be set [key90, key99]")
 	}
 }
+
+func TestCacheSetItemCallbackFunction(t *testing.T) {
+	t.Parallel()
+	cache := NewCache()
+	defer cache.Close()
+
+	cache.SetTTL(time.Duration(50 * time.Millisecond))
+	cache.SetSetItemCallback(func(key string, value interface{}) {
+		fmt.Printf("set key(%s)=(%v)\n", key, value)
+	})
+	cache.Set("key", "value1")
+	cache.Set("key2", "value2")
+	cache.Set("key", "value3")
+	cache.Set("key2", "value4")
+	v, _ := cache.Get("key")
+	fmt.Println(v)
+	v, _ = cache.Get("key2")
+	fmt.Println(v)
+}
